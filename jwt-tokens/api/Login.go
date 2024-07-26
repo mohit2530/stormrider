@@ -13,7 +13,7 @@ import (
 // Login method will try to validate username / password and create JWT
 func Login(w http.ResponseWriter, r *http.Request) {
 
-	creds, err := verifyUser(w, r)
+	creds, err := verifyUser(r)
 	if err != nil {
 		log.Printf("unable to decode the request body. err - %+v", err)
 		w.Header().Add("Content-Type", "application/json")
@@ -26,7 +26,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 // RefreshToken method will try to refresh the token and create JWT
 func RefreshToken(w http.ResponseWriter, r *http.Request) {
 
-	creds, err := verifyUser(w, r)
+	creds, err := verifyUser(r)
 	if err != nil {
 		log.Printf("unable to decode the request body. err - %+v", err)
 		w.Header().Add("Content-Type", "application/json")
@@ -34,7 +34,7 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = refreshToken(w, r)
+	err = refreshToken(r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -42,8 +42,7 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	types.CreateJwt(w, r, creds)
 }
 
-// verifyUser method verify if the user has the correct password or not
-func verifyUser(w http.ResponseWriter, r *http.Request) (types.Credentials, error) {
+func verifyUser(r *http.Request) (types.Credentials, error) {
 
 	var credentials types.Credentials
 	err := json.NewDecoder(r.Body).Decode(&credentials)
@@ -71,7 +70,7 @@ func verifyUser(w http.ResponseWriter, r *http.Request) (types.Credentials, erro
 }
 
 // refreshToken method to refresh if the token is under 30 seconds
-func refreshToken(w http.ResponseWriter, r *http.Request) error {
+func refreshToken(r *http.Request) error {
 
 	claims := &types.Claims{}
 	// control jwt token; prevent refresh if > 30 seconds of expiry
