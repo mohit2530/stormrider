@@ -1,1 +1,2 @@
-# Application with gateway and JWT token implementation
+# Auth app
+Authentication app built with JWT token with api gateway for authentication
