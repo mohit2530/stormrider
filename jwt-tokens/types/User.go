@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -21,11 +22,9 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-// createJwt creates a jwt token for a valid user
 func CreateJwt(w http.ResponseWriter, r *http.Request, creds Credentials) {
 
 	var claims Claims
-
 	expTime := time.Now().Add(7 * time.Minute) // every seven minutes
 	tokenStr, err := claims.initialize(creds, expTime)
 	if err != nil {
@@ -34,11 +33,13 @@ func CreateJwt(w http.ResponseWriter, r *http.Request, creds Credentials) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
 		Value:   tokenStr,
 		Expires: expTime,
 	})
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -49,9 +50,6 @@ func (c *Claims) initialize(credentials Credentials, expiryTime time.Time) (stri
 		ExpiresAt: expiryTime.Unix(),
 	}
 
-	// sign with claims and signing method
-	// using uuid as a jwtKey to obscure the secret key
-	// need a way to use this behind the scenes
 	var jwtKey = []byte(uuid.New().String())
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 	tokenStr, err := token.SignedString(jwtKey)
@@ -64,13 +62,15 @@ func (c *Claims) initialize(credentials Credentials, expiryTime time.Time) (stri
 }
 
 func saveTokenToLogFile(jwtKey []byte) {
-	file, err := os.OpenFile("log", os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("../LICENSE", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Printf("failed to create file, license - %+v", jwtKey)
+		fmt.Printf("failed to create file, license - %+v", jwtKey)
 		return
 	}
 
 	defer file.Close()
-	log.SetOutput(file)
-	log.Printf(" generated secret key -  %+v", string(jwtKey))
+	if _, err := file.WriteString(fmt.Sprintf("\nLICENSE=%s", string(jwtKey))); err != nil {
+		fmt.Printf("failed to write to file, license - %+v", jwtKey)
+		return
+	}
 }
