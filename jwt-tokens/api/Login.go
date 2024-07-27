@@ -10,7 +10,6 @@ import (
 	"github.com/mohit2530/jwt-tokens/types"
 )
 
-// Login method will try to validate username / password and create JWT
 func Login(w http.ResponseWriter, r *http.Request) {
 
 	creds, err := verifyUser(r)
@@ -23,7 +22,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	types.CreateJwt(w, r, creds)
 }
 
-// RefreshToken method will try to refresh the token and create JWT
 func RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	creds, err := verifyUser(r)
@@ -52,14 +50,10 @@ func verifyUser(r *http.Request) (types.Credentials, error) {
 	}
 
 	var fakeUsers = map[string]string{
-		"john doe":           "likeAKitten$$",
-		"alice walker":       "batmanCave1$",
-		"testuser@gmail.com": "testuserpassword1",
+		"admin": "password",
 	}
 
-	// verify if password exists; this obv should improve
-	// if pwd exists && is same as the users actual password
-	// storing pwd is probably not ideal; need to look for better solutions
+	// simulates a test env. NOT OK TO USE IN PROD ENV
 	expectedPwd, ok := fakeUsers[credentials.Username]
 	if !ok || expectedPwd != credentials.Password {
 		err := errors.New("unable to verify password ")
@@ -69,7 +63,6 @@ func verifyUser(r *http.Request) (types.Credentials, error) {
 	return credentials, nil
 }
 
-// refreshToken method to refresh if the token is under 30 seconds
 func refreshToken(r *http.Request) error {
 
 	claims := &types.Claims{}
@@ -77,7 +70,6 @@ func refreshToken(r *http.Request) error {
 	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > 30*time.Second {
 		return errors.New(" subject within jwt time limit")
 	}
-	// adds extra seven minutes
 	expTime := time.Now().Add(7 * time.Minute)
 	claims.ExpiresAt = expTime.Unix()
 	return nil
